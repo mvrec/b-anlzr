@@ -343,12 +343,12 @@ document.addEventListener("DOMContentLoaded", function () {
     for (var i = 0; i < length; i++) {
       if (i == drawIdx) {
         var p1 = maxNegative * halfHeight + halfHeight;
-        ctx.strokeStyle = '#558b2f';
+        ctx.strokeStyle = '#907cff';
         ctx.strokeRect(x, p1, 1, (maxPositive * halfHeight + halfHeight) - p1);
 
         var p2 = sumNegative / kNegative * halfHeight + halfHeight;
-        ctx.strokeStyle = '#8bc34a';
-        ctx.strokeRect(x, p2, 1, (sumPositive / kPositive * halfHeight + halfHeight) - p2);
+        ctx.strokeStyle = '#6f75fd';
+        ctx.strokeRect(x, p2, 0.5, (sumPositive / kPositive * halfHeight + halfHeight) - p2);
         x++;
         drawIdx += step;
         sumPositive = 0;
