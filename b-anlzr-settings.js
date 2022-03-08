@@ -374,7 +374,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function drawSpectrogram(spectrum, maxVal) {
     var scale = 1 / Math.log(maxVal + 1);
     //var gradient = chroma.scale(["black", "blue", "red", "yellow"]).domain([0, 0.03, 0.3, 0.7]);
-    var gradient = chroma.scale(["white", "#448aff", "#f44336", "#ffee58"]).domain([0, 0.1, 0.3, 0.7]);
+    var gradient = chroma.scale(["#202020", "#448aff", "#f44336", "#ffee58"]).domain([0, 0.1, 0.3, 0.7]);
     //var gradient = chroma.scale(["#448aff", "white"]).domain([0, 0.3]);
     if (!spectrogram) {
       var container = document.getElementById("spectrogramContainer");
@@ -443,7 +443,7 @@ document.addEventListener("DOMContentLoaded", function () {
     beatLines.style.height = (1 * height) + "px";
     beatLines.style.left = Math.round(spectrogramContainer.clientWidth / 2) + "px";
 
-    ctx.strokeStyle = "#616161";
+    ctx.strokeStyle = "#3edfce";
     for (var i = 0; i < beats.length; i++) {        
         ctx.strokeRect(beats[i], 0, 0.5, height);    
     }  
@@ -468,9 +468,9 @@ document.addEventListener("DOMContentLoaded", function () {
       for (var j = 0; j < height; j++) {
         var index = (i + j * width) * 4;
         var alpha = 255 / width * i;
-        canvasData.data[index + 0] = 255;
-        canvasData.data[index + 1] = 255;
-        canvasData.data[index + 2] = 255;
+        canvasData.data[index + 0] = 111;
+        canvasData.data[index + 1] = 117;
+        canvasData.data[index + 2] = 253;
         canvasData.data[index + 3] = alpha;
       }
     }
@@ -480,8 +480,8 @@ document.addEventListener("DOMContentLoaded", function () {
     var step = height / 8;
 
     ctx.font="10px Courier New";
-    ctx.fillStyle = "#9e9e9e";
-    ctx.strokeStyle = "#9e9e9e";
+    ctx.fillStyle = "#fff";
+    ctx.strokeStyle = "#fff";
 
     for (i = 0; i < height; i+=step) {
       // var idx = Math.round(i * factor);
