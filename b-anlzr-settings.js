@@ -1,8 +1,14 @@
-document.addEventListener("DOMContentLoaded", function () {
+var CallLoadScript = document.getElementById("LoadScript");
+CallLoadScript.addEventListener('click', function () {
 "use strict";
+  document.getElementById("mdl-layout__content").style.display = "inherit";
+  document.getElementById("welcome").style.display = "none";
   var srVal =  document.getElementById("sampleRateInput").value || 44100;
   var context = new AudioContext({ sampleRate: srVal }),
       trackGainNode = context.createGain();
+      if (context.state === 'suspended') {
+        context.resume();
+    }
   trackGainNode.gain.value = 0.25;
   //beats
   var clickSound = document.getElementById("clickSound"),  
