@@ -3,13 +3,13 @@ document.addEventListener("DOMContentLoaded", function () {
   var srVal =  document.getElementById("sampleRateInput").value || 44100;
   var context = new AudioContext({ sampleRate: srVal }),
       trackGainNode = context.createGain();
-  trackGainNode.gain.value = 0.10;
+  trackGainNode.gain.value = 0.25;
   //beats
   var clickSound = document.getElementById("clickSound"),  
       beatTimes,
       beatInterval,
       nextBeatTime = 0;
-  clickSound.volume = 0.25;
+  clickSound.volume = 0;
   //visualisation
   var spectrogram,
       waveform,
@@ -163,11 +163,11 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("mouseup", function () {
      isPlaybackBarMouseDown = false;
     });    
-    window.addEventListener("blur", function () {
-      if (!isPaused) {
-        togglePlay();
-      }
-    });
+   // window.addEventListener("blur", function () {
+   //   if (!isPaused) {
+   //     togglePlay();
+   //   }
+   // });
 
     trackGainBar = document.getElementById("trackGainBar");
     trackGainBar.oninput = function() {
