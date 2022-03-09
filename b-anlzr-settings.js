@@ -46,6 +46,7 @@ CallLoadScript.addEventListener('click', function () {
       trackGainBar,
       clickGainBar,
       beatIndicator = document.getElementById("beatIndicator"),
+      CompanyLogo = document.getElementById("CompanyLogo"),
       playbackTimeValue,
       isPlaybackBarMouseDown = false;
   var processAudioData = function (buffer) {
@@ -88,6 +89,7 @@ CallLoadScript.addEventListener('click', function () {
       beatTimes = mt.beats;
       beatInterval = mt.beatInterval;
       beatIndicator.style.animationDuration = beatInterval + "s";
+      CompanyLogo.style.animationDuration = beatInterval + "s";
       asyncCalcAndDrawSpectrogram(audioData, beatTimes);
     }, 100);
   }
@@ -186,7 +188,8 @@ CallLoadScript.addEventListener('click', function () {
       clickSound.volume = val * val;
     }
 
-    beatIndicator = document.getElementById("beatIndicator"); 
+    beatIndicator = document.getElementById("beatIndicator");
+    CompanyLogo = document.getElementById("CompanyLogo");  
   }
 
   function initAudioSource(buffer) {
@@ -266,8 +269,11 @@ CallLoadScript.addEventListener('click', function () {
         clickSound.play();
 
         beatIndicator.classList.remove("anim");
+        CompanyLogo.classList.remove("anim");
         void beatIndicator.offsetWidth;
+        void CompanyLogo.offsetWidth;
         beatIndicator.classList.add("anim");
+        CompanyLogo.classList.add("anim");
       }      
     }
 
@@ -498,5 +504,4 @@ CallLoadScript.addEventListener('click', function () {
   }
 
   initControls();
-
 });
