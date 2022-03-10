@@ -1,89 +1,95 @@
 var CallLoadScript = document.getElementById("LoadScript");
-CallLoadScript.addEventListener('click', function () {
-"use strict";
+CallLoadScript.addEventListener("click", function () {
+  "use strict";
   document.getElementById("mdl-layout__content").style.display = "inherit";
   document.getElementById("welcome").style.display = "none";
-  var srVal =  document.getElementById("sampleRateInput").value || 44100;
+  var srVal = document.getElementById("sampleRateInput").value || 44100;
   var context = new AudioContext({ sampleRate: srVal }),
-      trackGainNode = context.createGain();
-      if (context.state === 'suspended') {
-        context.resume();
-    }
+    trackGainNode = context.createGain();
+  if (context.state === "suspended") {
+    context.resume();
+  }
   trackGainNode.gain.value = 0.25;
   //beats
-  var clickSound = document.getElementById("clickSound"),  
-      beatTimes,
-      beatInterval,
-      nextBeatTime = 0;
+  var clickSound = document.getElementById("clickSound"),
+    beatTimes,
+    beatInterval,
+    nextBeatTime = 0;
   clickSound.volume = 0;
   //visualisation
   var spectrogram,
-      waveform,
-      beatLines,
-      scaleLines,
-      spectrogramContainer,
-      waveformContainer,      
-      audioSource,
-      audioBuffer,
-      minFQ = 77,
-      maxFQ = 12000,
-      BPO = 40,
-      idAnimFrame,
-      specHeight = getSpecHeight(minFQ, maxFQ, BPO);
+    waveform,
+    beatLines,
+    scaleLines,
+    spectrogramContainer,
+    waveformContainer,
+    audioSource,
+    audioBuffer,
+    minFQ = 77,
+    maxFQ = 12000,
+    BPO = 40,
+    idAnimFrame,
+    specHeight = getSpecHeight(minFQ, maxFQ, BPO);
   var secPerPx;
   //time
   var animStart,
-      playbackTime,
-      startedAt,
-      pausedAt,
-      duration,
-      isPaused = true;
+    playbackTime,
+    startedAt,
+    pausedAt,
+    duration,
+    isPaused = true;
   //controls
   var playbackBar = document.getElementById("playbackBar"),
-      btnTogglePlay,
-      fileInput,
-      iconTogglePlay,
-      trackGainBar,
-      clickGainBar,
-      beatIndicator = document.getElementById("beatIndicator"),
-      CompanyLogo = document.getElementById("CompanyLogo"),
-      playbackTimeValue,
-      isPlaybackBarMouseDown = false;
+    btnTogglePlay,
+    fileInput,
+    iconTogglePlay,
+    trackGainBar,
+    clickGainBar,
+    beatIndicator = document.getElementById("beatIndicator"),
+    CompanyLogo = document.getElementById("CompanyLogo"),
+    playbackTimeValue,
+    isPlaybackBarMouseDown = false;
   var processAudioData = function (buffer) {
-      audioBuffer = buffer;
-      playbackBar.max = buffer.duration;
-      var audioData = [];
-      if (buffer.numberOfChannels > 1) {
-        var channel1Data = buffer.getChannelData(0);
-        var channel2Data = buffer.getChannelData(1);
-        var length = channel1Data.length;
-        for (var i = 0; i < length; i++) {
-          audioData[i] = (channel1Data[i] + channel2Data[i]) / 2;
-        }
-      } else {
-        audioData = buffer.getChannelData(0);
+    audioBuffer = buffer;
+    playbackBar.max = buffer.duration;
+    var audioData = [];
+    if (buffer.numberOfChannels > 1) {
+      var channel1Data = buffer.getChannelData(0);
+      var channel2Data = buffer.getChannelData(1);
+      var length = channel1Data.length;
+      for (var i = 0; i < length; i++) {
+        audioData[i] = (channel1Data[i] + channel2Data[i]) / 2;
       }
+    } else {
+      audioData = buffer.getChannelData(0);
+    }
 
-      asyncCalcChain(audioData);
-  }
+    asyncCalcChain(audioData);
+  };
 
   function getSpecHeight(minimumFrequency, maximumFreqency, binsPerOctave) {
-      return (Math.ceil(binsPerOctave * Math.log(maximumFreqency / minimumFrequency) / Math.log(2)) | 0);;
+    return (
+      Math.ceil(
+        (binsPerOctave * Math.log(maximumFreqency / minimumFrequency)) /
+          Math.log(2)
+      ) | 0
+    );
   }
 
   function asyncCalcChain(audioData) {
     document.getElementById("bpmSpinner").classList.add("is-active");
     document.getElementById("spectrogramSpinner").classList.add("is-active");
     document.getElementById("waveformSpinner").classList.add("is-active");
-    asyncCalcTempo(audioData);     
+    asyncCalcTempo(audioData);
   }
-  function asyncCalcTempo(audioData) {    
-    setTimeout(function() {      
+  function asyncCalcTempo(audioData) {
+    setTimeout(function () {
       console.time("MusicTempo");
       var mt = new MusicTempo(audioData);
       console.timeEnd("MusicTempo");
       document.getElementById("bpmSpinner").classList.remove("is-active");
-      document.getElementById("bpmValue").textContent = Math.round(mt.tempo) + " BPM";
+      document.getElementById("bpmValue").textContent =
+        Math.round(mt.tempo) + " BPM";
       document.getElementById("bpmValue").style.display = "inline-block";
       beatIndicator.style.display = "inline-block";
       beatTimes = mt.beats;
@@ -93,23 +99,25 @@ CallLoadScript.addEventListener('click', function () {
       asyncCalcAndDrawSpectrogram(audioData, beatTimes);
     }, 100);
   }
-  function asyncCalcAndDrawSpectrogram(audioData, beatTimes) {    
-    setTimeout(function() {      
+  function asyncCalcAndDrawSpectrogram(audioData, beatTimes) {
+    setTimeout(function () {
       console.time("calcSpectrogram");
       var res = getSpectrogramCQ(audioData);
-      console.timeEnd("calcSpectrogram");      
+      console.timeEnd("calcSpectrogram");
       console.time("drawSpectrogram");
       drawSpectrogram(res.spectrum, res.specMaxVal);
       drawBeatLines(res.spectrum.length, res.spectrum[0].length, beatTimes);
       drawScale(minFQ, maxFQ, res.spectrum[0].length);
       console.timeEnd("drawSpectrogram");
-      document.getElementById("spectrogramSpinner").classList.remove("is-active");
+      document
+        .getElementById("spectrogramSpinner")
+        .classList.remove("is-active");
 
       asyncCalcAndDrawWaveform(audioData, res.spectrum.length);
     }, 100);
-  }  
-  function asyncCalcAndDrawWaveform(audioData, length) {    
-    setTimeout(function() {
+  }
+  function asyncCalcAndDrawWaveform(audioData, length) {
+    setTimeout(function () {
       console.time("drawWaveform");
       drawWaveform(audioData, length);
       console.timeEnd("drawWaveform");
@@ -120,76 +128,92 @@ CallLoadScript.addEventListener('click', function () {
       btnTogglePlay.disabled = false;
       document.getElementById("waveformSpinner").classList.remove("is-active");
     }, 100);
-  } 
+  }
   function initControls() {
     playbackTimeValue = document.getElementById("playbackTimeValue");
     spectrogramContainer = document.getElementById("spectrogramContainer");
-    spectrogramContainer.style.height = (52 + specHeight) + "px";
-    waveformContainer = document.getElementById("waveformContainer");  
-    document.getElementById("spectrogramTracker").style.height = (52 + specHeight) + "px";
+    spectrogramContainer.style.height = 52 + specHeight + "px";
+    waveformContainer = document.getElementById("waveformContainer");
+    document.getElementById("spectrogramTracker").style.height =
+      52 + specHeight + "px";
     document.getElementById("beatLinesSwitch").onchange = function () {
       var isVisible = document.getElementById("beatLinesSwitch").checked;
       if (isVisible) {
         beatLines.style.display = "block";
       } else {
         beatLines.style.display = "none";
-      }      
+      }
     };
-    //document.getElementById("beatIndicator").style.top = specHeight + "px";  
-      spectrogramContainer,
-      waveformContainer, 
-    btnTogglePlay = document.getElementById("btnTogglePlay");
+    //document.getElementById("beatIndicator").style.top = specHeight + "px";
+    spectrogramContainer,
+      waveformContainer,
+      (btnTogglePlay = document.getElementById("btnTogglePlay"));
     btnTogglePlay.onclick = togglePlay;
     iconTogglePlay = document.getElementById("iconTogglePlay");
 
     fileInput = document.getElementById("fileInput");
     fileInput.onchange = function () {
-        var files = document.getElementById("fileInput").files;
-        if (files.length == 0) return;
+      var files = document.getElementById("fileInput").files;
+      if (files.length == 0) return;
+      var filename = files.item(0).name;
+      var filetype = files.item(0).type;
+      var FileName = document.getElementById("FileName");
+      FileName.textContent = ("File Name : " + filename);
+      var FileType = document.getElementById("FileType");
+      FileType.textContent = ("File Type : " + filetype);
+      var filesize = files.item(0).size;
+      var fSExt = new Array("Bytes", "KB", "MB", "GB"),
+        i = 0;
+      while (filesize  > 900) {
+        filesize  /= 1024;
+        i++;
+      }
+      var exactSize = Math.round(filesize  * 100) / 100 + " " + fSExt[i];
+      var FileSize = document.getElementById("FileSize");
+      FileSize.textContent = ("File Size : " + exactSize);
 
-        var reader = new FileReader();
+      var reader = new FileReader();
+      reader.onload = function (fileEvent) {
+        context.decodeAudioData(fileEvent.target.result, processAudioData);
+      };
 
-        reader.onload = function(fileEvent) {
-          context.decodeAudioData(fileEvent.target.result, processAudioData);
-        }
-
-        reset();
-        playbackBar.disabled = true;
-        btnTogglePlay.disabled = true;
-        reader.readAsArrayBuffer(files[0]);
-    }
+      reset();
+      playbackBar.disabled = true;
+      btnTogglePlay.disabled = true;
+      reader.readAsArrayBuffer(files[0]);
+    };
 
     // playbackBar.addEventListener("change", function () {
     //   seek();
     // });
     playbackBar.addEventListener("click", function () {
       seek();
-    });    
+    });
     playbackBar.addEventListener("mousedown", function () {
-     isPlaybackBarMouseDown = true;
+      isPlaybackBarMouseDown = true;
     });
     document.addEventListener("mouseup", function () {
-     isPlaybackBarMouseDown = false;
-    });    
-   // window.addEventListener("blur", function () {
-   //   if (!isPaused) {
-   //     togglePlay();
-   //   }
-   // });
+      isPlaybackBarMouseDown = false;
+    });
+    // window.addEventListener("blur", function () {
+    //   if (!isPaused) {
+    //     togglePlay();
+    //   }
+    // });
 
     trackGainBar = document.getElementById("trackGainBar");
-    trackGainBar.oninput = function() {
+    trackGainBar.oninput = function () {
       var val = parseFloat(trackGainBar.value, 10);
       trackGainNode.gain.value = val * val;
-    }
+    };
     clickGainBar = document.getElementById("clickGainBar");
-    clickGainBar.oninput = function() {
+    clickGainBar.oninput = function () {
       var val = parseFloat(clickGainBar.value, 10);
       clickSound.volume = val * val;
-    }
+    };
 
     beatIndicator = document.getElementById("beatIndicator");
-    CompanyLogo = document.getElementById("CompanyLogo");  
+    CompanyLogo = document.getElementById("CompanyLogo");
   }
 
   function initAudioSource(buffer) {
@@ -199,12 +223,12 @@ CallLoadScript.addEventListener('click', function () {
     trackGainNode.connect(context.destination);
   }
   function resetTime() {
-      playbackTimeValue.textContent = "0c";
-      playbackTime = 0;
-      pausedAt = 0;
-      startedAt = 0;
-      isPaused = true;
-      nextBeatTime = 0;
+    playbackTimeValue.textContent = "0c";
+    playbackTime = 0;
+    pausedAt = 0;
+    startedAt = 0;
+    isPaused = true;
+    nextBeatTime = 0;
   }
   function reset() {
     if (!isPaused) togglePlay();
@@ -216,25 +240,25 @@ CallLoadScript.addEventListener('click', function () {
     if (spectrogram) {
       spectrogram.style.left = shift;
       waveform.style.left = shift;
-      beatLines.style.left = shift;      
+      beatLines.style.left = shift;
     }
   }
   function seek() {
-      if (!startedAt) {
-        resetTime();
-        idAnimFrame = requestAnimationFrame(animCycle);
-      }    
-      var newPlaybackTime = parseFloat(playbackBar.value, 10);
-      startedAt += playbackTime - newPlaybackTime;
-      playbackTime = newPlaybackTime;
-      for (nextBeatTime = 0; nextBeatTime < beatTimes.length; nextBeatTime++) {
-        if (playbackTime <= beatTimes[nextBeatTime]) break;
-      }
-      if (!isPaused) {
-        audioSource.stop();
-        initAudioSource(audioBuffer);        
-        audioSource.start(0, playbackTime);
-      }      
+    if (!startedAt) {
+      resetTime();
+      idAnimFrame = requestAnimationFrame(animCycle);
+    }
+    var newPlaybackTime = parseFloat(playbackBar.value, 10);
+    startedAt += playbackTime - newPlaybackTime;
+    playbackTime = newPlaybackTime;
+    for (nextBeatTime = 0; nextBeatTime < beatTimes.length; nextBeatTime++) {
+      if (playbackTime <= beatTimes[nextBeatTime]) break;
+    }
+    if (!isPaused) {
+      audioSource.stop();
+      initAudioSource(audioBuffer);
+      audioSource.start(0, playbackTime);
+    }
   }
   function togglePlay() {
     if (!startedAt) {
@@ -251,12 +275,12 @@ CallLoadScript.addEventListener('click', function () {
       pausedAt = context.currentTime;
       iconTogglePlay.textContent = "play_arrow";
     }
-    isPaused = !isPaused;    
+    isPaused = !isPaused;
   }
 
   function animCycle(timestamp) {
     if (!isPaused) {
-      playbackTime = context.currentTime - startedAt;      
+      playbackTime = context.currentTime - startedAt;
       if (!isPlaybackBarMouseDown) {
         playbackBar.MaterialSlider.change(playbackTime);
         if (playbackTime >= playbackBar.max) {
@@ -264,7 +288,10 @@ CallLoadScript.addEventListener('click', function () {
           return;
         }
       }
-      if (beatTimes[nextBeatTime] <= playbackTime || beatTimes[nextBeatTime] - playbackTime < 0.0166) {
+      if (
+        beatTimes[nextBeatTime] <= playbackTime ||
+        beatTimes[nextBeatTime] - playbackTime < 0.0166
+      ) {
         nextBeatTime++;
         clickSound.play();
 
@@ -274,11 +301,14 @@ CallLoadScript.addEventListener('click', function () {
         void CompanyLogo.offsetWidth;
         beatIndicator.classList.add("anim");
         CompanyLogo.classList.add("anim");
-      }      
+      }
     }
 
     playbackTimeValue.textContent = playbackTime.toFixed(2) + "s";
-    var shift = Math.round(spectrogramContainer.clientWidth / 2 + playbackTime / secPerPx * -1) + "px";
+    var shift =
+      Math.round(
+        spectrogramContainer.clientWidth / 2 + (playbackTime / secPerPx) * -1
+      ) + "px";
     spectrogram.style.left = shift;
     waveform.style.left = shift;
     beatLines.style.left = shift;
@@ -296,39 +326,40 @@ CallLoadScript.addEventListener('click', function () {
     var length = inputBuffer.length;
     // var zerosStart = new Array(bufferSize - hopSize);
     // zerosStart.fill(0);
-    // inputBuffer = zerosStart.concat(inputBuffer);        
+    // inputBuffer = zerosStart.concat(inputBuffer);
     inputBuffer = Array.from(inputBuffer);
     var zerosEnd = new Array(bufferSize - (inputBuffer.length % hopSize));
     zerosEnd.fill(0);
     inputBuffer = inputBuffer.concat(zerosEnd);
-    
+
     var spectrum = [];
     var specMaxVal = 0;
-    for (var wndStart = 0; wndStart < length; wndStart += hopSize) {   
-        var wndEnd = wndStart + bufferSize;
+    for (var wndStart = 0; wndStart < length; wndStart += hopSize) {
+      var wndEnd = wndStart + bufferSize;
 
-        var re = [];
-        var k = 0;
-        for (var i = wndStart; i < wndEnd; i++) {
-            re[k * 2] = /*hammWindow[k] */ inputBuffer[i];
-            re[k * 2 + 1] = 0;
-            //re[k] = inputBuffer[i];
-            k++;
-        }
-        constQ.calculateMagintudes(re);
-        for (var i = 0; i < constQ.magnitudes.length; i++) {
-          if (specMaxVal < constQ.magnitudes[i]) specMaxVal = constQ.magnitudes[i];
-        }
-        spectrum.push(constQ.magnitudes.slice());
+      var re = [];
+      var k = 0;
+      for (var i = wndStart; i < wndEnd; i++) {
+        re[k * 2] = /*hammWindow[k] */ inputBuffer[i];
+        re[k * 2 + 1] = 0;
+        //re[k] = inputBuffer[i];
+        k++;
+      }
+      constQ.calculateMagintudes(re);
+      for (var i = 0; i < constQ.magnitudes.length; i++) {
+        if (specMaxVal < constQ.magnitudes[i])
+          specMaxVal = constQ.magnitudes[i];
+      }
+      spectrum.push(constQ.magnitudes.slice());
     }
-    return {spectrum: spectrum, specMaxVal: specMaxVal};    
+    return { spectrum: spectrum, specMaxVal: specMaxVal };
   }
 
   function drawWaveform(waveData, width) {
     if (!waveform) {
       var container = document.getElementById("waveformContainer");
       waveform = document.createElement("canvas");
-      container.appendChild(waveform);      
+      container.appendChild(waveform);
     }
 
     var ctx = waveform.getContext("2d");
@@ -345,22 +376,27 @@ CallLoadScript.addEventListener('click', function () {
     waveform.style.left = Math.round(waveformContainer.clientWidth / 2) + "px";
 
     var x = 0,
-        sumPositive = 0,
-        sumNegative = 0,
-        maxPositive = 0,
-        maxNegative = 0,
-        kNegative = 0,
-        kPositive = 0,
-        drawIdx = step;
+      sumPositive = 0,
+      sumNegative = 0,
+      maxPositive = 0,
+      maxNegative = 0,
+      kNegative = 0,
+      kPositive = 0,
+      drawIdx = step;
     for (var i = 0; i < length; i++) {
       if (i == drawIdx) {
         var p1 = maxNegative * halfHeight + halfHeight;
-        ctx.strokeStyle = '#907cff';
-        ctx.strokeRect(x, p1, 1, (maxPositive * halfHeight + halfHeight) - p1);
+        ctx.strokeStyle = "#907cff";
+        ctx.strokeRect(x, p1, 1, maxPositive * halfHeight + halfHeight - p1);
 
-        var p2 = sumNegative / kNegative * halfHeight + halfHeight;
-        ctx.strokeStyle = '#6f75fd';
-        ctx.strokeRect(x, p2, 0.5, (sumPositive / kPositive * halfHeight + halfHeight) - p2);
+        var p2 = (sumNegative / kNegative) * halfHeight + halfHeight;
+        ctx.strokeStyle = "#6f75fd";
+        ctx.strokeRect(
+          x,
+          p2,
+          0.5,
+          (sumPositive / kPositive) * halfHeight + halfHeight - p2
+        );
         x++;
         drawIdx += step;
         sumPositive = 0;
@@ -368,7 +404,7 @@ CallLoadScript.addEventListener('click', function () {
         maxPositive = 0;
         maxNegative = 0;
         kNegative = 0;
-        kPositive = 0;        
+        kPositive = 0;
       } else {
         if (waveData[i] < 0) {
           sumNegative += waveData[i];
@@ -379,14 +415,15 @@ CallLoadScript.addEventListener('click', function () {
           kPositive++;
           if (maxPositive < waveData[i]) maxPositive = waveData[i];
         }
-        
       }
     }
   }
   function drawSpectrogram(spectrum, maxVal) {
     var scale = 1 / Math.log(maxVal + 1);
     //var gradient = chroma.scale(["black", "blue", "red", "yellow"]).domain([0, 0.03, 0.3, 0.7]);
-    var gradient = chroma.scale(["#202020", "#448aff", "#f44336", "#ffee58"]).domain([0, 0.1, 0.3, 0.7]);
+    var gradient = chroma
+      .scale(["#202020", "#448aff", "#f44336", "#ffee58"])
+      .domain([0, 0.1, 0.3, 0.7]);
     //var gradient = chroma.scale(["#448aff", "white"]).domain([0, 0.3]);
     if (!spectrogram) {
       var container = document.getElementById("spectrogramContainer");
@@ -406,9 +443,10 @@ CallLoadScript.addEventListener('click', function () {
 
     spectrogram.width = width;
     spectrogram.height = height;
-    spectrogram.style.width = (1 * width) + "px";
-    spectrogram.style.height = (1 * height) + "px";
-    spectrogram.style.left = Math.round(spectrogramContainer.clientWidth / 2) + "px";
+    spectrogram.style.width = 1 * width + "px";
+    spectrogram.style.height = 1 * height + "px";
+    spectrogram.style.left =
+      Math.round(spectrogramContainer.clientWidth / 2) + "px";
 
     spectrogram.style.transform = "scaleY(-1)";
 
@@ -422,7 +460,7 @@ CallLoadScript.addEventListener('click', function () {
         canvasData.data[index + 1] = val[1];
         canvasData.data[index + 2] = val[2];
         canvasData.data[index + 3] = 255;
-      }      
+      }
       for (; j < height; j++) {
         index = (i + j * width) * 4;
         //var val = 225 - (spectrum[i][j] * scale);
@@ -439,7 +477,9 @@ CallLoadScript.addEventListener('click', function () {
   }
 
   function drawBeatLines(width, height, beats) {
-    beats = beats.map(function(time) {return Math.round(time / secPerPx);});
+    beats = beats.map(function (time) {
+      return Math.round(time / secPerPx);
+    });
 
     if (!beatLines) {
       var container = document.getElementById("spectrogramContainer");
@@ -451,14 +491,15 @@ CallLoadScript.addEventListener('click', function () {
 
     beatLines.width = width;
     beatLines.height = height;
-    beatLines.style.width = (1 * width) + "px";
-    beatLines.style.height = (1 * height) + "px";
-    beatLines.style.left = Math.round(spectrogramContainer.clientWidth / 2) + "px";
+    beatLines.style.width = 1 * width + "px";
+    beatLines.style.height = 1 * height + "px";
+    beatLines.style.left =
+      Math.round(spectrogramContainer.clientWidth / 2) + "px";
 
     ctx.strokeStyle = "#3edfce";
-    for (var i = 0; i < beats.length; i++) {        
-        ctx.strokeRect(beats[i], 0, 0.5, height);    
-    }  
+    for (var i = 0; i < beats.length; i++) {
+      ctx.strokeRect(beats[i], 0, 0.5, height);
+    }
   }
 
   function drawScale(startFQ, end, height) {
@@ -473,13 +514,14 @@ CallLoadScript.addEventListener('click', function () {
     var width = 200;
     scaleLines.width = width;
     scaleLines.height = height;
-    scaleLines.style.left = (Math.round(spectrogramContainer.clientWidth / 2) - width) + "px";
+    scaleLines.style.left =
+      Math.round(spectrogramContainer.clientWidth / 2) - width + "px";
 
     var canvasData = ctx.getImageData(0, 0, width, height);
     for (var i = 0; i < width; i++) {
       for (var j = 0; j < height; j++) {
         var index = (i + j * width) * 4;
-        var alpha = 255 / width * i;
+        var alpha = (255 / width) * i;
         canvasData.data[index + 0] = 111;
         canvasData.data[index + 1] = 117;
         canvasData.data[index + 2] = 253;
@@ -491,15 +533,15 @@ CallLoadScript.addEventListener('click', function () {
 
     var step = height / 8;
 
-    ctx.font="10px Courier New";
+    ctx.font = "10px Courier New";
     ctx.fillStyle = "#fff";
     ctx.strokeStyle = "#fff";
 
-    for (i = 0; i < height; i+=step) {
+    for (i = 0; i < height; i += step) {
       // var idx = Math.round(i * factor);
       var hz = Math.round(Math.pow(Math.pow(2, 1 / BPO), i) * (minFQ * 2));
-      ctx.fillText(hz + " Hz", 150, (height - i) - 4);    
-      ctx.strokeRect(150, (height - i), 50, 0.5);
+      ctx.fillText(hz + " Hz", 150, height - i - 4);
+      ctx.strokeRect(150, height - i, 50, 0.5);
     }
   }
 
